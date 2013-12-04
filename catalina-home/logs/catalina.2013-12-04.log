@@ -1,0 +1,28 @@
+Dec 04, 2013 7:53:32 AM org.apache.coyote.AbstractProtocol init
+INFO: Initializing ProtocolHandler ["http-bio-8080"]
+Dec 04, 2013 7:53:32 AM org.apache.coyote.AbstractProtocol init
+INFO: Initializing ProtocolHandler ["ajp-bio-8009"]
+Dec 04, 2013 7:56:53 AM org.apache.catalina.startup.Catalina load
+INFO: Initialization processed in 33321425 ms
+Dec 04, 2013 7:59:41 AM org.apache.catalina.core.StandardService startInternal
+INFO: Starting service Catalina
+Dec 04, 2013 8:00:40 AM org.apache.catalina.core.StandardEngine startInternal
+INFO: Starting Servlet Engine: Apache Tomcat/@VERSION@
+Dec 04, 2013 8:01:05 AM org.apache.catalina.startup.HostConfig deployDirectory
+INFO: Deploying web application directory /Users/jimou/DevWorks/java_study/Tomcat/catalina-home/webapps/docs
+Dec 04, 2013 8:01:06 AM org.apache.catalina.util.SessionIdGenerator createSecureRandom
+INFO: Creation of SecureRandom instance for session ID generation using [SHA1PRNG] took [114] milliseconds.
+Dec 04, 2013 8:01:06 AM org.apache.catalina.startup.HostConfig deployDirectory
+INFO: Deploying web application directory /Users/jimou/DevWorks/java_study/Tomcat/catalina-home/webapps/examples
+Dec 04, 2013 8:01:06 AM org.apache.catalina.startup.HostConfig deployDirectory
+INFO: Deploying web application directory /Users/jimou/DevWorks/java_study/Tomcat/catalina-home/webapps/host-manager
+Dec 04, 2013 8:01:06 AM org.apache.catalina.startup.HostConfig deployDirectory
+INFO: Deploying web application directory /Users/jimou/DevWorks/java_study/Tomcat/catalina-home/webapps/manager
+Dec 04, 2013 8:01:06 AM org.apache.catalina.startup.HostConfig deployDirectory
+INFO: Deploying web application directory /Users/jimou/DevWorks/java_study/Tomcat/catalina-home/webapps/ROOT
+Dec 04, 2013 8:03:21 AM org.apache.coyote.AbstractProtocol start
+INFO: Starting ProtocolHandler ["http-bio-8080"]
+Dec 04, 2013 8:06:34 AM org.apache.coyote.AbstractProtocol start
+INFO: Starting ProtocolHandler ["ajp-bio-8009"]
+Dec 04, 2013 8:10:50 AM org.apache.catalina.startup.Catalina start
+INFO: Server startup in 735772 ms

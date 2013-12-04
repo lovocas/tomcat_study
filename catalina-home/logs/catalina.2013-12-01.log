@@ -1,0 +1,44 @@
+Dec 01, 2013 11:34:55 AM org.apache.catalina.core.AprLifecycleListener init
+INFO: The APR based Apache Tomcat Native library which allows optimal performance in production environments was not found on the java.library.path: /Users/jimou/Library/Java/Extensions:/Library/Java/Extensions:/Network/Library/Java/Extensions:/System/Library/Java/Extensions:/usr/lib/java:.
+Dec 01, 2013 11:34:55 AM org.apache.coyote.AbstractProtocol init
+INFO: Initializing ProtocolHandler ["http-bio-8080"]
+Dec 01, 2013 11:34:55 AM org.apache.coyote.AbstractProtocol init
+INFO: Initializing ProtocolHandler ["ajp-bio-8009"]
+Dec 01, 2013 11:34:55 AM org.apache.catalina.startup.Catalina load
+INFO: Initialization processed in 642 ms
+Dec 01, 2013 11:34:55 AM org.apache.catalina.core.StandardService startInternal
+INFO: Starting service Catalina
+Dec 01, 2013 11:34:55 AM org.apache.catalina.core.StandardEngine startInternal
+INFO: Starting Servlet Engine: Apache Tomcat/@VERSION@
+Dec 01, 2013 11:34:55 AM org.apache.catalina.startup.HostConfig deployDirectory
+INFO: Deploying web application directory /Users/jimou/DevWorks/java_study/Tomcat/catalina-home/webapps/docs
+Dec 01, 2013 11:34:56 AM org.apache.catalina.util.SessionIdGenerator createSecureRandom
+INFO: Creation of SecureRandom instance for session ID generation using [SHA1PRNG] took [352] milliseconds.
+Dec 01, 2013 11:34:56 AM org.apache.catalina.startup.HostConfig deployDirectory
+INFO: Deploying web application directory /Users/jimou/DevWorks/java_study/Tomcat/catalina-home/webapps/examples
+Dec 01, 2013 11:34:57 AM org.apache.catalina.startup.HostConfig deployDirectory
+INFO: Deploying web application directory /Users/jimou/DevWorks/java_study/Tomcat/catalina-home/webapps/host-manager
+Dec 01, 2013 11:34:57 AM org.apache.catalina.startup.HostConfig deployDirectory
+INFO: Deploying web application directory /Users/jimou/DevWorks/java_study/Tomcat/catalina-home/webapps/manager
+Dec 01, 2013 11:34:57 AM org.apache.catalina.startup.HostConfig deployDirectory
+INFO: Deploying web application directory /Users/jimou/DevWorks/java_study/Tomcat/catalina-home/webapps/ROOT
+Dec 01, 2013 11:34:57 AM org.apache.coyote.AbstractProtocol start
+INFO: Starting ProtocolHandler ["http-bio-8080"]
+Dec 01, 2013 11:34:57 AM org.apache.coyote.AbstractProtocol start
+INFO: Starting ProtocolHandler ["ajp-bio-8009"]
+Dec 01, 2013 11:34:57 AM org.apache.catalina.startup.Catalina start
+INFO: Server startup in 1774 ms
+Dec 01, 2013 11:35:01 AM org.apache.coyote.AbstractProtocol pause
+INFO: Pausing ProtocolHandler ["http-bio-8080"]
+Dec 01, 2013 11:35:01 AM org.apache.coyote.AbstractProtocol pause
+INFO: Pausing ProtocolHandler ["ajp-bio-8009"]
+Dec 01, 2013 11:35:01 AM org.apache.catalina.core.StandardService stopInternal
+INFO: Stopping service Catalina
+Dec 01, 2013 11:35:01 AM org.apache.coyote.AbstractProtocol stop
+INFO: Stopping ProtocolHandler ["http-bio-8080"]
+Dec 01, 2013 11:35:01 AM org.apache.coyote.AbstractProtocol stop
+INFO: Stopping ProtocolHandler ["ajp-bio-8009"]
+Dec 01, 2013 11:35:01 AM org.apache.coyote.AbstractProtocol destroy
+INFO: Destroying ProtocolHandler ["http-bio-8080"]
+Dec 01, 2013 11:35:01 AM org.apache.coyote.AbstractProtocol destroy
+INFO: Destroying ProtocolHandler ["ajp-bio-8009"]
