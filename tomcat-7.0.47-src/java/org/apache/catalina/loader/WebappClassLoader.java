@@ -20,10 +20,13 @@ package org.apache.catalina.loader;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FilePermission;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
@@ -126,7 +129,7 @@ public class WebappClassLoader
     extends URLClassLoader
     implements Lifecycle
  {
-
+    
     private static final org.apache.juli.logging.Log log=
         org.apache.juli.logging.LogFactory.getLog( WebappClassLoader.class );
 
@@ -277,6 +280,15 @@ public class WebappClassLoader
      * keyed by resource name.
      */
     protected HashMap<String, ResourceEntry> resourceEntries = new HashMap<String, ResourceEntry>();
+    
+    private Map<String, String> classNameToJar = new HashMap<String, String>();
+    private Map<String, Integer> jarToIndex = new HashMap<String, Integer>();
+    private File tempDir = null;
+    
+
+    public void setTempDir(File tempDir) {
+        this.tempDir = tempDir;
+    }
 
 
     /**
@@ -950,6 +962,8 @@ public class WebappClassLoader
         }
         result4[jarRealFiles.length] = file;
         jarRealFiles = result4;
+        int index = this.jarNames.length;
+        this.jarToIndex.put(this.jarNames[index - 1], index - 1);
     }
 
 
@@ -1869,7 +1883,6 @@ public class WebappClassLoader
         if (encoding.indexOf("EBCDIC")!=-1) {
             needConvert = true;
         }
-
     }
 
 
@@ -3071,100 +3084,114 @@ public class WebappClassLoader
                 if (!openJARs()) {
                     return null;
                 }
-                for (i = 0; (entry == null) && (i < jarFilesLength); i++) {
+                String jar = this.classNameToJar.get(name);
+                if(jar != null && !jar.isEmpty()) {
+                    Integer index = this.jarToIndex.get(jar);
+                    if(index != null) {
+                        jarEntry = jarFiles[index].getJarEntry(path);
+                        i = index;
+                    }
+                    else {
+                        this.classNameToJar.remove(name);
+                    }
+                }
+                if (jarEntry == null) {
+                    for (i = 0; (jarEntry == null) && (i < jarFilesLength); i++) {
+                        jarEntry = jarFiles[i].getJarEntry(path);
+                    }
+                    i --;
+                }
+                if (jarEntry != null) {
 
-                    jarEntry = jarFiles[i].getJarEntry(path);
-
-                    if (jarEntry != null) {
-
-                        entry = new ResourceEntry();
-                        try {
-                            entry.codeBase = getURI(jarRealFiles[i]);
-                            String jarFakeUrl = entry.codeBase.toString();
-                            jarFakeUrl = "jar:" + jarFakeUrl + "!/" + path;
-                            entry.source = new URL(jarFakeUrl);
-                            entry.lastModified = jarRealFiles[i].lastModified();
-                        } catch (MalformedURLException e) {
-                            return null;
+                    entry = new ResourceEntry();
+                    try {
+                        entry.codeBase = getURI(jarRealFiles[i]);
+                        if(!classNameToJar.containsKey(name)) {
+                            this.classNameToJar.put(name, jarNames[i]);
                         }
-                        contentLength = (int) jarEntry.getSize();
-                        try {
-                            entry.manifest = jarFiles[i].getManifest();
-                            binaryStream = jarFiles[i].getInputStream(jarEntry);
-                        } catch (IOException e) {
-                            return null;
-                        }
+                        String jarFakeUrl = entry.codeBase.toString();
+                        jarFakeUrl = "jar:" + jarFakeUrl + "!/" + path;
+                        entry.source = new URL(jarFakeUrl);
+                        entry.lastModified = jarRealFiles[i].lastModified();
+                    } catch (MalformedURLException e) {
+                        return null;
+                    }
+                    contentLength = (int) jarEntry.getSize();
+                    try {
+                        entry.manifest = jarFiles[i].getManifest();
+                        binaryStream = jarFiles[i].getInputStream(jarEntry);
+                    } catch (IOException e) {
+                        return null;
+                    }
 
-                        // Extract resources contained in JAR to the workdir
-                        if (antiJARLocking && !(path.endsWith(".class"))) {
-                            byte[] buf = new byte[1024];
-                            File resourceFile = new File
-                                (loaderDir, jarEntry.getName());
-                            if (!resourceFile.exists()) {
-                                Enumeration<JarEntry> entries =
-                                    jarFiles[i].entries();
-                                while (entries.hasMoreElements()) {
-                                    JarEntry jarEntry2 =  entries.nextElement();
-                                    if (!(jarEntry2.isDirectory())
-                                        && (!jarEntry2.getName().endsWith
-                                            (".class"))) {
-                                        resourceFile = new File
-                                            (loaderDir, jarEntry2.getName());
-                                        try {
-                                            if (!resourceFile.getCanonicalPath().startsWith(
-                                                    canonicalLoaderDir)) {
-                                                throw new IllegalArgumentException(
-                                                        sm.getString("webappClassLoader.illegalJarPath",
-                                                    jarEntry2.getName()));
-                                            }
-                                        } catch (IOException ioe) {
+                    // Extract resources contained in JAR to the workdir
+                    if (antiJARLocking && !(path.endsWith(".class"))) {
+                        byte[] buf = new byte[1024];
+                        File resourceFile = new File
+                            (loaderDir, jarEntry.getName());
+                        if (!resourceFile.exists()) {
+                            Enumeration<JarEntry> entries =
+                                jarFiles[i].entries();
+                            while (entries.hasMoreElements()) {
+                                JarEntry jarEntry2 =  entries.nextElement();
+                                if (!(jarEntry2.isDirectory())
+                                    && (!jarEntry2.getName().endsWith
+                                        (".class"))) {
+                                    resourceFile = new File
+                                        (loaderDir, jarEntry2.getName());
+                                    try {
+                                        if (!resourceFile.getCanonicalPath().startsWith(
+                                                canonicalLoaderDir)) {
                                             throw new IllegalArgumentException(
-                                                    sm.getString("webappClassLoader.validationErrorJarPath",
-                                                            jarEntry2.getName()), ioe);
+                                                    sm.getString("webappClassLoader.illegalJarPath",
+                                                jarEntry2.getName()));
                                         }
-                                        File parentFile = resourceFile.getParentFile();
-                                        if (!parentFile.mkdirs() && !parentFile.exists()) {
-                                            // Ignore the error (like the IOExceptions below)
-                                        }
-                                        FileOutputStream os = null;
-                                        InputStream is = null;
-                                        try {
-                                            is = jarFiles[i].getInputStream
-                                                (jarEntry2);
-                                            os = new FileOutputStream
-                                                (resourceFile);
-                                            while (true) {
-                                                int n = is.read(buf);
-                                                if (n <= 0) {
-                                                    break;
-                                                }
-                                                os.write(buf, 0, n);
+                                    } catch (IOException ioe) {
+                                        throw new IllegalArgumentException(
+                                                sm.getString("webappClassLoader.validationErrorJarPath",
+                                                        jarEntry2.getName()), ioe);
+                                    }
+                                    File parentFile = resourceFile.getParentFile();
+                                    if (!parentFile.mkdirs() && !parentFile.exists()) {
+                                        // Ignore the error (like the IOExceptions below)
+                                    }
+                                    FileOutputStream os = null;
+                                    InputStream is = null;
+                                    try {
+                                        is = jarFiles[i].getInputStream
+                                            (jarEntry2);
+                                        os = new FileOutputStream
+                                            (resourceFile);
+                                        while (true) {
+                                            int n = is.read(buf);
+                                            if (n <= 0) {
+                                                break;
                                             }
-                                            resourceFile.setLastModified(
-                                                    jarEntry2.getTime());
+                                            os.write(buf, 0, n);
+                                        }
+                                        resourceFile.setLastModified(
+                                                jarEntry2.getTime());
+                                    } catch (IOException e) {
+                                        // Ignore
+                                    } finally {
+                                        try {
+                                            if (is != null) {
+                                                is.close();
+                                            }
                                         } catch (IOException e) {
                                             // Ignore
-                                        } finally {
-                                            try {
-                                                if (is != null) {
-                                                    is.close();
-                                                }
-                                            } catch (IOException e) {
-                                                // Ignore
+                                        }
+                                        try {
+                                            if (os != null) {
+                                                os.close();
                                             }
-                                            try {
-                                                if (os != null) {
-                                                    os.close();
-                                                }
-                                            } catch (IOException e) {
-                                                // Ignore
-                                            }
+                                        } catch (IOException e) {
+                                            // Ignore
                                         }
                                     }
                                 }
                             }
                         }
-
                     }
 
                 }
@@ -3528,5 +3555,48 @@ public class WebappClassLoader
 
     }
 
-
+    public void saveClassNameToJar() {
+        ObjectOutputStream oos = null;
+        try {
+            
+            FileOutputStream fos = new FileOutputStream(new File(tempDir, "abc"));
+            oos = new ObjectOutputStream(fos);
+            oos.writeObject(this.classNameToJar);
+        } catch(Exception e) {
+            log.error("error serializing");
+        }
+        finally {
+                try {
+                    oos.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+        }
+        
+    }
+    
+    public void restoreClassNameToJar() {
+        ObjectInputStream ois = null;
+        try {
+            
+            FileInputStream fis = new FileInputStream(new File(tempDir, "abc"));
+            ois = new ObjectInputStream(fis);
+            Map<String, String> mapInDisk = (Map<String, String>)ois.readObject();
+            if(mapInDisk != null) {
+                this.classNameToJar = mapInDisk;
+            }
+                    
+        } catch(Exception e) {
+            log.error("error deserializing");
+        }
+        finally {
+            if(ois != null ) {
+                try {
+                    ois.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
 }

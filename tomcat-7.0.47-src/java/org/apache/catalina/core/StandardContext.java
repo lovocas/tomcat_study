@@ -107,6 +107,7 @@ import org.apache.catalina.deploy.MessageDestinationRef;
 import org.apache.catalina.deploy.NamingResources;
 import org.apache.catalina.deploy.SecurityCollection;
 import org.apache.catalina.deploy.SecurityConstraint;
+import org.apache.catalina.loader.WebappClassLoader;
 import org.apache.catalina.loader.WebappLoader;
 import org.apache.catalina.session.StandardManager;
 import org.apache.catalina.startup.TldConfig;
@@ -5196,7 +5197,7 @@ public class StandardContext extends ContainerBase
      */
     @Override
     protected synchronized void startInternal() throws LifecycleException {
-
+        long beginNano = System.nanoTime();
         if(log.isDebugEnabled())
             log.debug("Starting " + getBaseName());
 
@@ -5242,6 +5243,9 @@ public class StandardContext extends ContainerBase
             WebappLoader webappLoader = new WebappLoader(getParentClassLoader());
             webappLoader.setDelegate(getDelegate());
             setLoader(webappLoader);
+           
+            
+            
         }
 
         // Initialize character set mapper
@@ -5297,14 +5301,22 @@ public class StandardContext extends ContainerBase
                 // Start our subordinate components, if any
                 if ((loader != null) && (loader instanceof Lifecycle))
                     ((Lifecycle) loader).start();
-
+                
                 // since the loader just started, the webapp classloader is now
                 // created.
                 // By calling unbindThread and bindThread in a row, we setup the
                 // current Thread CCL to be the webapp classloader
                 unbindThread(oldCCL);
-                oldCCL = bindThread();
 
+                long loadStartTime = System.nanoTime();
+                Loader loader = getLoader();
+                WebappClassLoader classLoader = (WebappClassLoader)loader.getClassLoader();
+                classLoader.setTempDir((File)context.getAttribute(ServletContext.TEMPDIR));
+                classLoader.restoreClassNameToJar();
+                oldCCL = bindThread();
+                long loadEndTime = System.nanoTime();
+                System.out.println();
+                        
                 // Initialize logger again. Other components might have used it
                 // too early, so it should be reset.
                 logger = null;
@@ -5488,15 +5500,19 @@ public class StandardContext extends ContainerBase
         // Close all JARs right away to avoid always opening a peak number 
         // of files on startup
         if (getLoader() instanceof WebappLoader) {
-            ((WebappLoader) getLoader()).closeJARs(true);
+            WebappLoader loader = ((WebappLoader) getLoader());
+            loader.closeJARs(true);
+           ((WebappClassLoader)loader.getClassLoader()).saveClassNameToJar();
         }
-
+        
         // Reinitializing if something went wrong
         if (!ok) {
             setState(LifecycleState.FAILED);
         } else {
             setState(LifecycleState.STARTING);
         }
+        log.info("****Context use ********** " + (System.nanoTime() - beginNano ));
+        
     }
 
     private Map<String, Map<String, String>> buildInjectionMap(NamingResources namingResources) {
